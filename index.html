@@ -3,607 +3,1128 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dashboard de Aulas Virtuales 2026 — Ministerio de Salud y Deportes</title>
+<title>Dashboard de Aulas Virtuales 2026 — Ministerio de Salud y Deportes Mendoza</title>
+<!-- Google Fonts: Inter -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Chart.js & SheetJS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1"></script>
 <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
 :root {
-    --navy: #0B109F;
-    --navy-dark: #080C75;
-    --sky: #36B4E6;
-    --tan: #C8A877;
-    --cream: #F6F5F0;
-    --bg-primary: #EFEDE6;
-    --bg-card: #ffffff;
-    --text-primary: #1c1c2b;
-    --text-secondary: #52525b;
-    --text-on-dark: #ffffff;
-    --gap: 16px;
-    --radius: 10px;
+  --primary: #0F2D6B;
+  --primary-hover: #0A1E4A;
+  --accent: #2563EB;
+  --accent-light: #EFF6FF;
+  --accent-border: #BFDBFE;
+  
+  --iniciado: #16A34A;
+  --iniciado-bg: #DCFCE7;
+  --permanente: #0284C7;
+  --permanente-bg: #E0F2FE;
+  --terminado: #64748B;
+  --terminado-bg: #F1F5F9;
+  --no-iniciado: #D97706;
+  --no-iniciado-bg: #FEF3C7;
+  --sin-fecha: #94A3B8;
+  --sin-fecha-bg: #F8FAFC;
+  
+  --bg-main: #F8FAFC;
+  --bg-card: #FFFFFF;
+  --text-main: #0F172A;
+  --text-muted: #64748B;
+  --border-subtle: #E2E8F0;
+  --border-strong: #CBD5E1;
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
 }
-* { margin:0; padding:0; box-sizing:border-box; }
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    line-height: 1.5;
-}
-body.hc { --text-secondary: #2b2b33; --bg-primary: #e9e7de; }
-body.hc .kpi-card, body.hc .chart-container, body.hc .table-section, body.hc .data-tools {
-    box-shadow: none;
-    border: 1.5px solid #1c1c2b;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  line-height: 1.5;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  -webkit-font-smoothing: antialiased;
 }
 
-.dashboard-container { max-width: 1480px; margin: 0 auto; padding: var(--gap); }
-
-.dashboard-header {
-    background: var(--navy);
-    color: var(--text-on-dark);
-    padding: 18px 24px;
-    border-radius: var(--radius);
-    margin-bottom: var(--gap);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    border-bottom: 4px solid var(--sky);
+/* Modo Alto Contraste */
+body.hc {
+  --bg-main: #F1F5F9;
+  --bg-card: #FFFFFF;
+  --border-subtle: #475569;
+  --border-strong: #0F172A;
+  --text-muted: #334155;
 }
-.header-title-row { display: flex; align-items: center; gap: 14px; }
-.header-badge-gov {
-    background: rgba(255,255,255,0.15);
-    border: 1px solid rgba(255,255,255,0.3);
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: .5px;
-    text-transform: uppercase;
-}
-.dashboard-header h1 { font-size: 19px; font-weight: 700; }
-.dashboard-header p { font-size: 12px; color: rgba(255,255,255,0.85); margin-top: 2px; }
-
-.filters { display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap; }
-.filter-group { display: flex; flex-direction: column; gap: 4px; }
-.filter-group label {
-    font-size: 11px;
-    color: rgba(255,255,255,0.85);
-    text-transform: uppercase;
-    letter-spacing: .4px;
-}
-.filter-group select, .filter-group input[type="text"] {
-    padding: 6px 8px;
-    border: 1px solid rgba(255,255,255,.3);
-    border-radius: 6px;
-    background: rgba(255,255,255,.12);
-    color: #fff;
-    font-size: 12.5px;
-    min-width: 135px;
-}
-.filter-group input[type="text"]::placeholder { color: rgba(255,255,255,.6); }
-.filter-group select option { background: var(--navy); color: #fff; }
-
-.btn-action, .btn-clear, .btn-hc {
-    padding: 7px 12px;
-    border-radius: 6px;
-    border: 1px solid rgba(255,255,255,.35);
-    background: transparent;
-    color: #fff;
-    font-size: 12px;
-    cursor: pointer;
-    align-self: flex-end;
-    transition: background 0.2s;
-}
-.btn-action:hover, .btn-clear:hover, .btn-hc:hover { background: rgba(255,255,255,.15); }
-
-.data-tools {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-    background: var(--bg-card);
-    padding: 12px 18px;
-    border-radius: var(--radius);
-    margin-bottom: var(--gap);
-    box-shadow: 0 1px 3px rgba(0,0,0,.06);
-}
-.data-tools .btn-tool {
-    padding: 7px 13px;
-    border-radius: 6px;
-    border: 1px solid var(--navy);
-    background: #fff;
-    color: var(--navy);
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: all 0.2s;
-}
-.data-tools .btn-tool:hover { background: #eef2ff; }
-.data-tools .btn-tool.primary {
-    background: var(--navy);
-    color: #fff;
-}
-.data-tools .btn-tool.primary:hover { background: var(--navy-dark); }
-.data-tools .btn-tool.accent {
-    border-color: #1e7e34;
-    color: #1e7e34;
-}
-.data-tools .btn-tool.accent:hover { background: #e6f4ea; }
-.data-tools .status-info {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-left: auto;
+body.hc .kpi-card, body.hc .chart-container, body.hc .table-section, body.hc .sticky-toolbar {
+  border: 1.5px solid #0F172A;
+  box-shadow: none;
 }
 
-.active-filter-banner {
-    display: none;
-    background: #eef2ff;
-    border: 1px solid #b9c3f7;
-    color: var(--navy);
-    border-radius: 8px;
-    padding: 8px 14px;
-    margin-bottom: var(--gap);
-    font-size: 12.5px;
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
-.active-filter-banner.show { display: block; }
-.active-filter-banner b { cursor: pointer; text-decoration: underline; }
 
-.section-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    margin: 14px 2px 8px;
-    padding-top: 6px;
-    border-top: 1px dashed #d6d3c8;
+.container {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 16px 20px 48px;
 }
-.section-label:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
 
-.kpi-row { display: grid; gap: var(--gap); margin-bottom: var(--gap); }
-.kpi-row.primary { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
-.kpi-row.secondary { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
-
-.kpi-card {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 16px 18px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    border-top: 3px solid var(--sky);
-    display: flex;
-    gap: 12px;
-    align-items: flex-start;
+/* HEADER INSTITUCIONAL */
+.inst-header {
+  background: linear-gradient(135deg, #0F2D6B 0%, #0A1E4A 100%);
+  color: #FFFFFF;
+  border-radius: var(--radius-lg);
+  padding: 20px 28px;
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  box-shadow: var(--shadow-md);
+  border-bottom: 4px solid #38BDF8;
 }
-.kpi-card.navy { border-top-color: var(--navy); }
-.kpi-card.sky { border-top-color: var(--sky); }
-.kpi-card.tan { border-top-color: var(--tan); }
-.kpi-card.green { border-top-color: #1e7e34; }
-.kpi-card.gray { border-top-color: #7d8597; }
-.kpi-icon { font-size: 22px; line-height: 1; margin-top: 2px; }
-.kpi-label { font-size: 11.5px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 3px; font-weight: 600; }
-.kpi-value { font-size: 26px; font-weight: 800; color: var(--navy); }
-.kpi-row.secondary .kpi-value { font-size: 20px; font-weight: 700; }
-.kpi-sub { font-size: 11.5px; color: var(--text-secondary); margin-top: 2px; }
+.inst-brand {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.gov-badge {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #BAE6FD;
+}
+.inst-header h1 {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 2px;
+}
+.inst-header p {
+  font-size: 12.5px;
+  color: #E2E8F0;
+}
+.inst-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.btn-header {
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.1);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.btn-header:hover {
+  background: rgba(255,255,255,0.22);
+  border-color: rgba(255,255,255,0.5);
+}
+.btn-header.primary {
+  background: #38BDF8;
+  color: #0F172A;
+  border-color: #38BDF8;
+  font-weight: 700;
+}
+.btn-header.primary:hover {
+  background: #7DD3FC;
+}
 
-.chart-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: var(--gap); margin-bottom: var(--gap); }
+/* HERO KPI STRIP - 4 MACRO MÉTRICAS DE PRIMER GOLPE DE VISTA */
+.hero-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.hero-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.hero-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 4px;
+  background: var(--accent);
+}
+.hero-card.c-total::before { background: var(--accent); }
+.hero-card.c-matricula::before { background: var(--iniciado); }
+.hero-card.c-activos::before { background: var(--permanente); }
+.hero-card.c-cobertura::before { background: #8B5CF6; }
+
+.hero-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: var(--bg-main);
+  flex-shrink: 0;
+}
+.hero-card.c-total .hero-icon { background: #EFF6FF; color: #1D4ED8; }
+.hero-card.c-matricula .hero-icon { background: #DCFCE7; color: #15803D; }
+.hero-card.c-activos .hero-icon { background: #E0F2FE; color: #0284C7; }
+.hero-card.c-cobertura .hero-icon { background: #F3E8FF; color: #7E22CE; }
+
+.hero-content { flex: 1; min-width: 0; }
+.hero-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.hero-val {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text-main);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+.hero-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+/* ANALYTICS KPI STRIP - MÉTRICAS DE RIGOR ESTADÍSTICO */
+.analytics-kpis {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.stat-pill {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-sm);
+}
+.stat-pill-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: space-between;
+}
+.stat-pill-val {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-main);
+  font-variant-numeric: tabular-nums;
+}
+.stat-pill-sub {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+/* STICKY TOOLBAR (FILTROS Y BÚSQUEDA) */
+.sticky-toolbar {
+  position: sticky;
+  top: 10px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 12px 18px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.toolbar-main-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.search-wrapper {
+  flex: 1;
+  min-width: 260px;
+  position: relative;
+}
+.search-input {
+  width: 100%;
+  padding: 8px 12px 8px 36px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  font-size: 13px;
+  color: var(--text-main);
+  background: var(--bg-main);
+  outline: none;
+  transition: all 0.2s;
+}
+.search-input:focus {
+  border-color: var(--accent);
+  background: #FFF;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+.search-icon {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filters-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-select-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+.filter-select {
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: #FFF;
+  font-size: 12.5px;
+  color: var(--text-main);
+  outline: none;
+  cursor: pointer;
+  min-width: 140px;
+}
+.filter-select:focus {
+  border-color: var(--accent);
+}
+
+.btn-toolbar {
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-strong);
+  background: #FFF;
+  color: var(--text-main);
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-toolbar:hover {
+  background: #F1F5F9;
+  border-color: var(--text-muted);
+}
+.btn-toolbar.clear {
+  color: #DC2626;
+  border-color: #FECACA;
+  background: #FEF2F2;
+}
+.btn-toolbar.clear:hover {
+  background: #FEE2E2;
+}
+
+.chips-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border-subtle);
+}
+.chips-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+.chip {
+  background: #F1F5F9;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.chip:hover {
+  background: #E2E8F0;
+  color: var(--text-main);
+}
+.chip.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #FFF;
+  font-weight: 600;
+}
+
+/* BANNER DE FILTROS ACTIVOS */
+.active-banner {
+  display: none;
+  background: #EFF6FF;
+  border: 1px solid #BFDBFE;
+  color: #1E40AF;
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  margin-bottom: 16px;
+  font-size: 12.5px;
+  align-items: center;
+  justify-content: space-between;
+}
+.active-banner.show { display: flex; }
+.active-tags { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.filter-tag {
+  background: #DBEAFE;
+  color: #1E3A8A;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.filter-tag:hover { background: #BFDBFE; }
+
+/* MODAL / PANEL DESPLEGABLE DE EXCEL & HERRAMIENTAS */
+.panel-collapsible {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+  display: none;
+}
+.panel-collapsible.open { display: block; }
+.panel-collapsible-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.panel-collapsible-head h4 {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.dropzone-box {
+  border: 2px dashed #93C5FD;
+  background: #F8FAFC;
+  border-radius: var(--radius-sm);
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.dropzone-box.drag-over {
+  background: #EFF6FF;
+  border-color: var(--accent);
+}
+.export-buttons-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* SECCIÓN DE GRÁFICOS */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
 .chart-container {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
 }
-.chart-container h3 { font-size: 13.5px; font-weight: 700; margin-bottom: 4px; color: var(--navy); }
-.chart-container .hint { font-size: 11px; color: var(--text-secondary); margin-bottom: 12px; }
-.chart-container canvas { max-height: 320px; width: 100%; }
-.chart-wide { grid-column: 1 / -1; }
-
-.warn-box {
-    background: #FFF8E8;
-    border: 1px solid var(--tan);
-    color: #5c481d;
-    border-radius: 8px;
-    padding: 8px 12px;
-    font-size: 11.5px;
-    margin-top: 10px;
+.chart-container.wide {
+  grid-column: 1 / -1;
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+.chart-title-group h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  letter-spacing: -0.01em;
+}
+.chart-title-group p {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.chart-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 320px;
+}
+.chart-canvas-wrapper.tall {
+  height: 440px;
 }
 
+/* TABLA Y PAGINACIÓN */
 .table-section {
-    background: var(--bg-card);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    box-shadow: 0 1px 3px rgba(0,0,0,.08);
-    overflow-x: auto;
+  background: var(--bg-card);
+  border-radius: var(--radius-md);
+  padding: 18px 20px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
 }
-.table-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.table-section h3 { font-size: 13.5px; font-weight: 700; color: var(--navy); }
-.data-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-.data-table thead th {
-    text-align: left;
-    padding: 8px 10px;
-    border-bottom: 2px solid var(--navy);
-    color: var(--text-secondary);
-    font-weight: 700;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: .4px;
-    white-space: nowrap;
-    cursor: pointer;
-    user-select: none;
+.table-header-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
 }
-.data-table thead th:hover { color: var(--navy); background: #f8f9fa; }
-.data-table tbody td { padding: 9px 10px; border-bottom: 1px solid #f0f0f0; vertical-align: middle; }
-.data-table tbody tr:hover { background: #f8f9fa; }
-
-.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; text-align: center; white-space: nowrap; }
-.badge-iniciado { background: #e6f4ea; color: #1e7e34; }
-.badge-permanente { background: #e0f2fe; color: #0369a1; }
-.badge-terminado { background: #f1f3f5; color: #495057; border: 1px solid #ced4da; }
-.badge-no-iniciado { background: #fff4e5; color: #8a5300; }
-.badge-sin-fecha { background: #fef3c7; color: #92400e; }
-
-.pag { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; font-size: 12px; color: var(--text-secondary); }
-.pag button { padding: 5px 12px; border: 1px solid #dee2e6; background: #fff; border-radius: 6px; cursor: pointer; font-size: 12px; }
-.pag button:disabled { opacity: .4; cursor: default; }
-
-.dashboard-footer {
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 6px;
-    font-size: 11.5px;
-    color: var(--text-secondary);
-    padding: 14px 4px 4px;
-    border-top: 1px solid #d6d3c8;
-    margin-top: 12px;
+.table-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
 }
-
-.dropzone-container {
-    background: #fdfdfd;
-    border: 2px dashed #b9c3f7;
-    border-radius: var(--radius);
-    padding: 14px 20px;
-    margin-bottom: var(--gap);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 14px;
-    flex-wrap: wrap;
-    transition: all 0.25s ease;
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
 }
-.dropzone-container.drag-over {
-    background: #eef2ff;
-    border-color: var(--navy);
-    box-shadow: 0 0 0 3px rgba(11,16,159,0.15);
+.page-size-select {
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  font-size: 12px;
+  outline: none;
 }
-.dropzone-text {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12.5px;
-    color: var(--text-primary);
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
 }
-.dropzone-text .icon { font-size: 24px; }
-.dropzone-actions { display: flex; gap: 8px; align-items: center; }
-
-.quick-filters {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: var(--gap);
-    align-items: center;
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
 }
-.quick-filter-chip {
-    background: #fff;
-    border: 1px solid #d4d4d8;
-    color: var(--text-secondary);
-    font-size: 11.5px;
-    padding: 4px 10px;
-    border-radius: 16px;
-    cursor: pointer;
-    transition: all 0.2s;
-    user-select: none;
+.data-table th {
+  background: #F8FAFC;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border-strong);
+  text-align: left;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
 }
-.quick-filter-chip:hover { border-color: var(--navy); color: var(--navy); }
-.quick-filter-chip.active {
-    background: var(--navy);
-    color: #fff;
-    border-color: var(--navy);
-    font-weight: 600;
+.data-table th:hover {
+  color: var(--primary);
+  background: #F1F5F9;
+}
+.data-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  vertical-align: middle;
+}
+.data-table tbody tr {
+  transition: background-color 0.1s;
+  cursor: pointer;
+}
+.data-table tbody tr:hover {
+  background-color: #F8FAFC;
+}
+.data-table tfoot td {
+  padding: 10px 12px;
+  background: #F8FAFC;
+  font-weight: 700;
+  border-top: 2px solid var(--border-strong);
+  font-variant-numeric: tabular-nums;
 }
 
+/* BADGES DE ESTADO (SEMÁNTICA LIMPIA) */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-iniciado { background: var(--iniciado-bg); color: #15803D; border: 1px solid #BBF7D0; }
+.badge-permanente { background: var(--permanente-bg); color: #0369A1; border: 1px solid #BAE6FD; }
+.badge-terminado { background: var(--terminado-bg); color: #475569; border: 1px solid #CBD5E1; }
+.badge-no-iniciado { background: var(--no-iniciado-bg); color: #B45309; border: 1px solid #FDE68A; }
+.badge-sin-fecha { background: var(--sin-fecha-bg); color: #64748B; border: 1px solid #E2E8F0; }
+
+/* PAGINACIÓN */
+.pagination-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.pag-buttons {
+  display: flex;
+  gap: 6px;
+}
+.pag-btn {
+  padding: 5px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: #FFF;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+.pag-btn:hover:not(:disabled) {
+  background: #F1F5F9;
+  border-color: var(--text-muted);
+}
+.pag-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-muted);
+}
+.empty-state-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+}
+.empty-state h5 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+/* MODAL DE DETALLE (DRAWER/POPUP) */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal-overlay.open { display: flex; }
+.modal-dialog {
+  background: #FFFFFF;
+  border-radius: var(--radius-md);
+  max-width: 560px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+  animation: modalEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes modalEnter {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.modal-header {
+  background: #F8FAFC;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h3 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.btn-close-modal {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  font-size: 13px;
+}
+.modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.modal-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.modal-field-val {
+  font-size: 13.5px;
+  color: var(--text-main);
+  font-weight: 500;
+}
+.modal-footer {
+  padding: 14px 20px;
+  background: #F8FAFC;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* TOAST */
 .toast {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: var(--navy);
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-    font-size: 13px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    z-index: 9999;
-    opacity: 0;
-    transform: translateY(15px);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    pointer-events: none;
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #0F172A;
+  color: #FFF;
+  padding: 12px 18px;
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  font-size: 12.5px;
+  font-weight: 500;
+  z-index: 9999;
+  opacity: 0;
+  transform: translateY(15px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
 }
 .toast.show {
-    opacity: 1;
-    transform: translateY(0);
+  opacity: 1;
+  transform: translateY(0);
 }
-.toast.success { background: #1b5e20; }
-.toast.error { background: #b71c1c; }
+.toast.success { background: #15803D; }
+.toast.error { background: #B91C1C; }
 
-@media (max-width: 820px) {
-    .chart-row { grid-template-columns: 1fr; }
-    .kpi-row.primary, .kpi-row.secondary { grid-template-columns: repeat(2, 1fr); }
-    .filters { flex-direction: column; align-items: stretch; }
-    .data-tools { flex-direction: column; align-items: stretch; }
-    .data-tools .status-info { margin-left: 0; text-align: center; }
-    .dropzone-container { flex-direction: column; text-align: center; }
-    .dropzone-text { flex-direction: column; }
+/* FOOTER */
+.dash-footer {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--text-muted);
 }
 
+/* RESPONSIVE */
+@media (max-width: 1080px) {
+  .hero-kpis { grid-template-columns: repeat(2, 1fr); }
+  .analytics-kpis { grid-template-columns: repeat(3, 1fr); }
+  .charts-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .hero-kpis { grid-template-columns: 1fr; }
+  .analytics-kpis { grid-template-columns: repeat(2, 1fr); }
+  .toolbar-main-row { flex-direction: column; align-items: stretch; }
+  .filter-select { min-width: 100%; }
+  .inst-header { flex-direction: column; align-items: stretch; text-align: left; }
+}
+
+/* IMPRESIÓN Y PDF */
 @media print {
-    body { background: #fff !important; color: #000 !important; }
-    .dashboard-container { max-width: 100% !important; padding: 0 !important; }
-    .dashboard-header .filters, .btn-clear, .btn-hc, .data-tools, .dropzone-container, .quick-filters, .pag, .toast {
-        display: none !important;
-    }
-    .dashboard-header {
-        background: #0B109F !important;
-        color: #fff !important;
-        padding: 12px 18px !important;
-        -webkit-print-color-adjust: exact;
-        print-color-adjust: exact;
-    }
-    .kpi-card, .chart-container, .table-section {
-        box-shadow: none !important;
-        border: 1px solid #ccc !important;
-        page-break-inside: avoid;
-    }
-    .chart-row { grid-template-columns: 1fr 1fr; }
-    .chart-wide { grid-column: 1 / -1; }
-    canvas { max-height: 240px !important; }
-    .data-table { font-size: 10px !important; }
-    .data-table th, .data-table td { padding: 4px 6px !important; }
+  body { background: #FFF !important; }
+  .container { padding: 0 !important; max-width: 100% !important; }
+  .sticky-toolbar, .panel-collapsible, .pagination-bar, .inst-actions, .toast, .modal-overlay {
+    display: none !important;
+  }
+  .hero-card, .chart-container, .table-section, .stat-pill {
+    box-shadow: none !important;
+    border: 1px solid #CBD5E1 !important;
+    break-inside: avoid;
+  }
+  .chart-canvas-wrapper { height: 260px !important; }
 }
 </style>
 </head>
 <body>
-<div class="dashboard-container">
 
-  <header class="dashboard-header">
-    <div class="header-title-row">
-      <div class="header-badge-gov">Salud Mendoza</div>
+<div class="container">
+
+  <!-- ENCABEZADO INSTITUCIONAL -->
+  <header class="inst-header">
+    <div class="inst-brand">
+      <div class="gov-badge">Salud Mendoza</div>
       <div>
         <h1>Gestión de Aulas Virtuales 2026</h1>
-        <p><span id="total-label">57</span> espacios formativos registrados · Campus Virtual de Salud · Datos actualizados</p>
+        <p><span id="total-label" class="tabular">57</span> espacios formativos registrados · Campus Virtual de Salud · Dirección de Modernización</p>
       </div>
     </div>
-    <div class="filters">
-      <div class="filter-group">
-        <label>Buscar aula</label>
-        <input type="text" id="f-search" placeholder="Nombre o contenido...">
-      </div>
-      <div class="filter-group">
-        <label>Dirección / Área</label>
-        <select id="f-categoria"><option value="all">Todas</option></select>
-      </div>
-      <div class="filter-group">
-        <label>Tipo</label>
-        <select id="f-tipo"><option value="all">Todos</option></select>
-      </div>
-      <div class="filter-group">
-        <label>Estado</label>
-        <select id="f-estado"><option value="all">Todos</option></select>
-      </div>
-      <div class="filter-group">
-        <label>Acceso</label>
-        <select id="f-acceso"><option value="all">Todos</option></select>
-      </div>
-      <button class="btn-clear" id="btn-clear">Limpiar</button>
-      <button class="btn-hc" id="btn-hc">◐ Contraste</button>
+    <div class="inst-actions">
+      <button class="btn-header primary" id="btn-toggle-tools">⚡ Cargar Planilla / Exportar</button>
+      <button class="btn-header" id="btn-hc" title="Alternar modo de alto contraste">◐ Contraste</button>
     </div>
   </header>
 
-  <div class="data-tools">
-    <button class="btn-tool primary" id="btn-dl-html" title="Descargar una copia completa autónoma en HTML">⬇️ Descargar HTML Autónomo</button>
-    <button class="btn-tool accent" id="btn-dl-xlsx" title="Exportar la vista actual o todos los registros a Excel">📊 Exportar a Excel (.xlsx)</button>
-    <button class="btn-tool" id="btn-dl-csv" title="Descargar en formato CSV compatible con Excel">📄 Exportar CSV</button>
-    <button class="btn-tool" id="btn-dl-md" title="Exportar informe ejecutivo en Markdown">📝 Resumen Markdown (.md)</button>
-    <button class="btn-tool" id="btn-print" title="Vista de impresión o guardar en PDF">🖨️ Imprimir / Guardar PDF</button>
-    <span class="status-info" id="status-info">Base consolidada: 57 aulas activas</span>
-  </div>
-
-  <!-- Zona de Ingesta Inteligente de Excel (Drag & Drop) -->
-  <div class="dropzone-container" id="dropzone">
-    <div class="dropzone-text">
-      <span class="icon">📁</span>
-      <div>
-        <strong>Actualización en tiempo real desde Excel:</strong>
-        <span>Arrastra y suelta aquí tu archivo <code>.xlsx</code> o selecciónalo desde tu computadora para actualizar instantáneamente.</span>
-      </div>
+  <!-- PANEL DESPLEGABLE: INGESTA EXCEL Y EXPORTACIONES -->
+  <section class="panel-collapsible" id="panel-tools">
+    <div class="panel-collapsible-head">
+      <h4>Centro de Sincronización y Exportación de Datos</h4>
+      <button class="btn-toolbar" id="btn-close-tools" style="padding: 2px 8px;">✕ Cerrar</button>
     </div>
-    <div class="dropzone-actions">
+    
+    <div class="dropzone-box" id="dropzone">
+      <div style="font-size: 26px; margin-bottom: 6px;">📂</div>
+      <strong style="font-size: 13.5px; color: var(--primary);">Actualización instantánea desde Excel (.xlsx)</strong>
+      <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 12px;">Arrastra y suelta tu archivo o selecciona desde tu equipo para recalcular todo el tablero en caliente.</p>
       <input type="file" id="file-excel-input" accept=".xlsx, .xls, .csv" style="display: none;">
-      <button class="btn-tool primary" id="btn-browse-file" style="margin: 0;">Seleccionar archivo .xlsx</button>
+      <button class="btn-toolbar" id="btn-browse-file" style="margin: 0 auto; background: var(--primary); color: #FFF; border-color: var(--primary);">Seleccionar archivo .xlsx</button>
     </div>
+
+    <div class="export-buttons-group">
+      <button class="btn-toolbar" id="btn-dl-html" title="Descargar una copia autónoma e interactiva">⬇️ Descargar HTML Autónomo</button>
+      <button class="btn-toolbar" id="btn-dl-xlsx" title="Exportar la vista filtrada actual a Excel">📊 Exportar a Excel (.xlsx)</button>
+      <button class="btn-toolbar" id="btn-dl-csv" title="Exportar CSV con codificación UTF-8 BOM">📄 Exportar CSV</button>
+      <button class="btn-toolbar" id="btn-dl-md" title="Descargar resumen ejecutivo en Markdown">📝 Resumen Markdown (.md)</button>
+      <button class="btn-toolbar" id="btn-print" title="Generar versión para imprimir o PDF oficial">🖨️ Imprimir / Guardar PDF</button>
+      <span style="font-size: 11.5px; color: var(--text-muted); margin-left: auto; align-self: center;" id="status-info">Base consolidada: 57 aulas activas</span>
+    </div>
+  </section>
+
+  <!-- HERO KPIS: RESPUESTA DIRECTA A PRIMER GOLPE DE VISTA -->
+  <section class="hero-kpis">
+    <div class="hero-card c-total">
+      <div class="hero-icon">📋</div>
+      <div class="hero-content">
+        <div class="hero-label">Aulas en Seguimiento</div>
+        <div class="hero-val tabular" id="kpi-total">0</div>
+        <div class="hero-sub" id="kpi-total-sub">0 cursos · 0 cápsulas</div>
+      </div>
+    </div>
+    
+    <div class="hero-card c-matricula">
+      <div class="hero-icon">👥</div>
+      <div class="hero-content">
+        <div class="hero-label">Matrícula Total Registrada</div>
+        <div class="hero-val tabular" id="kpi-participantes">0</div>
+        <div class="hero-sub" id="kpi-matricula-sub">acumulado de cursantes formales</div>
+      </div>
+    </div>
+
+    <div class="hero-card c-activos">
+      <div class="hero-icon">▶️</div>
+      <div class="hero-content">
+        <div class="hero-label">Espacios Activos / Vigentes</div>
+        <div class="hero-val tabular" id="kpi-activos">0</div>
+        <div class="hero-sub" id="kpi-activos-sub">0 iniciados · 0 permanentes</div>
+      </div>
+    </div>
+
+    <div class="hero-card c-cobertura">
+      <div class="hero-icon">🎯</div>
+      <div class="hero-content">
+        <div class="hero-label">Completitud de Matrícula</div>
+        <div class="hero-val tabular" id="kpi-cobertura">0%</div>
+        <div class="hero-sub" id="kpi-cobertura-sub">0 de 0 aulas con alumnos reportados</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANALYTICS KPIS: RIGOR ESTADÍSTICO Y DETALLE OPERATIVO -->
+  <section class="analytics-kpis">
+    <div class="stat-pill">
+      <div class="stat-pill-label">Promedio Cohorte</div>
+      <div class="stat-pill-val tabular" id="kpi-promedio">0</div>
+      <div class="stat-pill-sub">cursantes por aula cargada</div>
+    </div>
+
+    <div class="stat-pill">
+      <div class="stat-pill-label">Mediana Típica</div>
+      <div class="stat-pill-val tabular" id="kpi-mediana">0</div>
+      <div class="stat-pill-sub">libre de distorsión por outliers</div>
+    </div>
+
+    <div class="stat-pill">
+      <div class="stat-pill-label">Prom. Cursos vs Cápsulas</div>
+      <div class="stat-pill-val tabular" id="kpi-prom-segmentado">0 / 0</div>
+      <div class="stat-pill-sub">cursos cupo vs cápsulas</div>
+    </div>
+
+    <div class="stat-pill">
+      <div class="stat-pill-label">Próximos a Iniciar</div>
+      <div class="stat-pill-val tabular" id="kpi-no-iniciado">0</div>
+      <div class="stat-pill-sub">con fecha asignada</div>
+    </div>
+
+    <div class="stat-pill">
+      <div class="stat-pill-label">En Diseño / Previstos</div>
+      <div class="stat-pill-val tabular" id="kpi-sin-fecha">0</div>
+      <div class="stat-pill-sub">en estructuración pedagógica</div>
+    </div>
+  </section>
+
+  <!-- STICKY TOOLBAR: CONTROLES DE FILTRO Y BÚSQUEDA -->
+  <section class="sticky-toolbar">
+    <div class="toolbar-main-row">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" class="search-input" id="f-search" placeholder="Buscar por nombre de aula, temática o área...">
+      </div>
+
+      <div class="filters-group">
+        <div class="filter-select-wrapper">
+          <select class="filter-select" id="f-categoria">
+            <option value="all">Todas las Direcciones / Áreas</option>
+          </select>
+        </div>
+
+        <div class="filter-select-wrapper">
+          <select class="filter-select" id="f-tipo">
+            <option value="all">Todos los Tipos</option>
+          </select>
+        </div>
+
+        <div class="filter-select-wrapper">
+          <select class="filter-select" id="f-estado">
+            <option value="all">Todos los Estados</option>
+          </select>
+        </div>
+
+        <div class="filter-select-wrapper">
+          <select class="filter-select" id="f-acceso">
+            <option value="all">Cualquier Acceso</option>
+          </select>
+        </div>
+
+        <button class="btn-toolbar clear" id="btn-clear" title="Restablecer todos los filtros aplicados">Limpiar Filtros</button>
+      </div>
+    </div>
+
+    <!-- Atajos Rápidos -->
+    <div class="chips-row">
+      <span class="chips-title">Atajos:</span>
+      <button class="chip" data-filter-type="estado" data-filter-val="Iniciado">▶️ Cursos Iniciados</button>
+      <button class="chip" data-filter-type="estado" data-filter-val="Permanente">🔄 Permanentes</button>
+      <button class="chip" data-filter-type="estado" data-filter-val="No Iniciado">⏳ Próximos</button>
+      <button class="chip" data-filter-type="estado" data-filter-val="Sin Fecha Inicio">📅 En Diseño</button>
+      <button class="chip" data-filter-type="tipo" data-filter-val="Capsula">💊 Cápsulas</button>
+      <button class="chip" data-filter-type="acceso" data-filter-val="Libre">🔓 Acceso Libre</button>
+    </div>
+  </section>
+
+  <!-- BANNER DE FILTROS ACTIVOS -->
+  <div class="active-banner" id="active-banner">
+    <div class="active-tags" id="active-tags-list"></div>
+    <span style="font-weight: 700; cursor: pointer; text-decoration: underline;" onclick="dash.clearFilters()">Restablecer todo</span>
   </div>
 
-  <!-- Filtros rápidos por estado o situación -->
-  <div class="quick-filters">
-    <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Atajos:</span>
-    <button class="quick-filter-chip" data-filter-type="estado" data-filter-val="Iniciado">▶️ Solo Cursos Iniciados</button>
-    <button class="quick-filter-chip" data-filter-type="estado" data-filter-val="Permanente">🔄 Solo Aulas Permanentes</button>
-    <button class="quick-filter-chip" data-filter-type="estado" data-filter-val="No Iniciado">⏳ Próximos a Iniciar</button>
-    <button class="quick-filter-chip" data-filter-type="estado" data-filter-val="Sin Fecha Inicio">📅 Previstos en Diseño</button>
-    <button class="quick-filter-chip" data-filter-type="tipo" data-filter-val="Capsula">💊 Solo Cápsulas</button>
-    <button class="quick-filter-chip" data-filter-type="acceso" data-filter-val="Libre">🔓 Acceso Libre</button>
+  <!-- SECCIÓN DE GRÁFICOS INTERACTIVOS OPTIMIZADOS -->
+  <div class="charts-grid">
+    
+    <!-- Gráfico 1: Barras Horizontales por Dirección / Área (Lectura Natural) -->
+    <div class="chart-container wide">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <h3>Espacios Formativos por Dirección / Área (Desagregados por Estado)</h3>
+          <p>Disposición horizontal ordenada por volumen para lectura inmediata sin inclinación de texto. Clic en barra para filtrar.</p>
+        </div>
+      </div>
+      <div class="chart-canvas-wrapper tall">
+        <canvas id="chart-cat-estado"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 2: Participantes por Dirección -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <h3>Distribución de Matrícula por Dirección / Área</h3>
+          <p>Volumen de cursantes formalmente matriculados en aulas activas y terminadas.</p>
+        </div>
+      </div>
+      <div class="chart-canvas-wrapper">
+        <canvas id="chart-cat-part"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 3: Tipo vs Acceso -->
+    <div class="chart-container">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <h3>Modalidad Pedagógica y Política de Acceso</h3>
+          <p>Distribución de recursos formativos según condición de matrícula.</p>
+        </div>
+      </div>
+      <div class="chart-canvas-wrapper">
+        <canvas id="chart-tipo-acceso"></canvas>
+      </div>
+    </div>
+
+    <!-- Gráfico 4: Cronograma Temporal 2026 -->
+    <div class="chart-container wide">
+      <div class="chart-header">
+        <div class="chart-title-group">
+          <h3>Cronograma Mensual de Inicio de Cohortes 2026</h3>
+          <p>Aperturas mensuales y ritmo de incorporación formativa en el ciclo anual. (Excluye aulas permanentes de consulta continua).</p>
+        </div>
+      </div>
+      <div class="chart-canvas-wrapper">
+        <canvas id="chart-cronograma"></canvas>
+      </div>
+    </div>
+
   </div>
 
-  <div class="active-filter-banner" id="banner"></div>
-
-  <div class="section-label">Estado operativo de los espacios formativos</div>
-  <section class="kpi-row primary">
-    <div class="kpi-card navy">
-      <div class="kpi-icon">📋</div>
-      <div>
-        <div class="kpi-label">Aulas registradas</div>
-        <div class="kpi-value" id="kpi-total">0</div>
-        <div class="kpi-sub" id="kpi-total-sub">41 cursos · 16 cápsulas</div>
-      </div>
-    </div>
-    <div class="kpi-card sky">
-      <div class="kpi-icon">🔄</div>
-      <div>
-        <div class="kpi-label">Permanentes</div>
-        <div class="kpi-value" id="kpi-permanente">0</div>
-        <div class="kpi-sub">autoadministradas / continuas</div>
-      </div>
-    </div>
-    <div class="kpi-card green">
-      <div class="kpi-icon">▶️️</div>
-      <div>
-        <div class="kpi-label">Cursos iniciados</div>
-        <div class="kpi-value" id="kpi-iniciado">0</div>
-        <div class="kpi-sub">cohortes en cursada activa</div>
-      </div>
-    </div>
-    <div class="kpi-card gray">
-      <div class="kpi-icon">🏁</div>
-      <div>
-        <div class="kpi-label">Cursos terminados</div>
-        <div class="kpi-value" id="kpi-terminado">0</div>
-        <div class="kpi-sub">cohortes finalizadas en 2026</div>
-      </div>
-    </div>
-  </section>
-
-  <div class="section-label">Flujo de matrícula y analítica de datos</div>
-  <section class="kpi-row secondary" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));">
-    <div class="kpi-card navy">
-      <div class="kpi-icon">👥</div>
-      <div>
-        <div class="kpi-label">Participantes cargados</div>
-        <div class="kpi-value" id="kpi-participantes">0</div>
-        <div class="kpi-sub">acumulado en aulas activas</div>
-      </div>
-    </div>
-    <div class="kpi-card navy">
-      <div class="kpi-icon">📊</div>
-      <div>
-        <div class="kpi-label">Promedio de cohorte</div>
-        <div class="kpi-value" id="kpi-promedio">0</div>
-        <div class="kpi-sub">cursantes por aula con cupo</div>
-      </div>
-    </div>
-    <div class="kpi-card tan">
-      <div class="kpi-icon">⏳</div>
-      <div>
-        <div class="kpi-label">Próx. apertura inscripción</div>
-        <div class="kpi-value" id="kpi-no-iniciado">0</div>
-        <div class="kpi-sub">con diseño y fecha asignada</div>
-      </div>
-    </div>
-    <div class="kpi-card tan">
-      <div class="kpi-icon">📅</div>
-      <div>
-        <div class="kpi-label">Previstos sin fecha</div>
-        <div class="kpi-value" id="kpi-sin-fecha">0</div>
-        <div class="kpi-sub">planificados 2026 en diseño</div>
-      </div>
-    </div>
-    <div class="kpi-card sky">
-      <div class="kpi-icon">🔓</div>
-      <div>
-        <div class="kpi-label">Acceso Libre vs Cerrado</div>
-        <div class="kpi-value" id="kpi-acceso-ratio">0 / 0</div>
-        <div class="kpi-sub">libres / solo cursantes</div>
-      </div>
-    </div>
-    <div class="kpi-card green">
-      <div class="kpi-icon">📈</div>
-      <div>
-        <div class="kpi-label">Completitud de Matrícula</div>
-        <div class="kpi-value" id="kpi-cobertura">0%</div>
-        <div class="kpi-sub">aulas con registro numérico</div>
-      </div>
-    </div>
-  </section>
-
-  <div id="toast" class="toast">Notificación</div>
-
-  <section class="chart-row">
-    <div class="chart-container chart-wide">
-      <h3>Aulas por Dirección / Área, desagregadas por Estado</h3>
-      <div class="hint">Click en un segmento filtra por Dirección + Estado. Click en la leyenda superior filtra por Estado en todo el tablero.</div>
-      <canvas id="chart-cat-estado"></canvas>
-    </div>
-
-    <div class="chart-container">
-      <h3>Impacto en matrícula: Participantes por Dirección / Área</h3>
-      <div class="hint">Volumen total de cursantes e inscriptos matriculados formalmente.</div>
-      <canvas id="chart-cat-part"></canvas>
-    </div>
-
-    <div class="chart-container">
-      <h3>Tipo de recurso formativo según modalidad de acceso</h3>
-      <div class="hint">Distribución entre Cursos y Cápsulas según política de matriculación.</div>
-      <canvas id="chart-tipo-acceso"></canvas>
-    </div>
-
-    <div class="chart-container chart-wide">
-      <h3>Cronograma de inicio de cohortes 2026 (solo cursos con fecha confirmada)</h3>
-      <div class="hint">Barras: Aulas que inician cursada en el mes · Línea: Cursos acumulados iniciados en el ciclo.</div>
-      <canvas id="chart-cronograma"></canvas>
-      <div class="warn-box">
-        ℹ️ <strong>Nota de seguimiento:</strong> No se incluyen en esta línea temporal las <strong>26 aulas permanentes</strong> (autoadministradas y de consulta continua) ni las <strong>6 previstas sin fecha</strong> que están en etapa de estructuración didáctica.
-      </div>
-    </div>
-  </section>
-
+  <!-- TABLA DETALLADA CON FILTROS, PAGINACIÓN DINÁMICA Y MODAL -->
   <section class="table-section">
-    <div class="table-section-head">
-      <h3>Detalle de Aulas (<span id="table-count">0</span>)</h3>
+    <div class="table-header-bar">
+      <div class="table-title">
+        Detalle de Espacios Formativos (<span id="table-count" class="tabular">0</span>)
+      </div>
+      <div class="table-controls">
+        <span>Filas por página:</span>
+        <select class="page-size-select" id="page-size-select">
+          <option value="10">10</option>
+          <option value="15" selected>15</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+          <option value="all">Todas</option>
+        </select>
+      </div>
     </div>
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th data-col="aula">Aula Virtual</th>
-          <th data-col="categoria">Dirección / Área</th>
-          <th data-col="tipo">Tipo</th>
-          <th data-col="acceso">Acceso</th>
-          <th data-col="fecha">Fecha Inicio</th>
-          <th data-col="participantes">Participantes</th>
-          <th data-col="estado">Estado</th>
-        </tr>
-      </thead>
-      <tbody id="table-body"></tbody>
-    </table>
-    <div class="pag">
+
+    <div class="table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th data-col="aula">Aula Virtual</th>
+            <th data-col="categoria">Dirección / Área</th>
+            <th data-col="tipo">Tipo</th>
+            <th data-col="acceso">Acceso</th>
+            <th data-col="fecha">Fecha Inicio</th>
+            <th data-col="participantes" style="text-align: right;">Participantes</th>
+            <th data-col="estado">Estado</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+        <tfoot id="table-foot">
+          <tr>
+            <td colspan="5" style="text-align: right; color: var(--text-muted);">Total registros visibles:</td>
+            <td style="text-align: right;" id="foot-total-part">0</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+    <div class="pagination-bar">
       <span id="pag-info">Mostrando 0-0 de 0</span>
-      <div>
-        <button id="pag-prev">← Anterior</button>
-        <button id="pag-next">Siguiente →</button>
+      <div class="pag-buttons">
+        <button class="pag-btn" id="pag-prev">← Anterior</button>
+        <button class="pag-btn" id="pag-next">Siguiente →</button>
       </div>
     </div>
   </section>
 
-  <footer class="dashboard-footer">
+  <footer class="dash-footer">
     <span>Fuente: Registro Operativo de Aulas Moodle 2026 — Dirección de Modernización.</span>
     <span>Plataforma eSalud · Ministerio de Salud y Deportes de Mendoza</span>
   </footer>
+
 </div>
 
+<!-- MODAL / DRAWER DE FICHA TÉCNICA DEL AULA -->
+<div class="modal-overlay" id="modal-detail">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3 id="modal-aula-title">Ficha Técnica del Espacio Formativo</h3>
+      <button class="btn-close-modal" id="btn-close-modal">&times;</button>
+    </div>
+    <div class="modal-body" id="modal-aula-content">
+      <!-- Inyectado dinámicamente -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn-toolbar" id="btn-modal-dismiss">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST NOTIFICACIÓN -->
+<div id="toast" class="toast">Notificación</div>
+
+<!-- DATA HOLDER JSON -->
 <script id="data-holder" type="application/json">
 [{"id": 1, "aula": "traslado seguro y manejo de Pacientes Críticos (hm)", "tipo": "Curso", "categoria": "Organismos Externos", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": "2026-10-13", "mes": "2026-10", "fecha_raw": "2026-10-13", "estado": "No Iniciado"}, {"id": 2, "aula": "Reporte de incidentes", "tipo": "Curso", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": "2026-10-13", "mes": "2026-10", "fecha_raw": "2026-10-13", "estado": "No Iniciado"}, {"id": 3, "aula": "CAEP Bloque 3", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": "2026-10-20", "mes": "2026-10", "fecha_raw": "oct 20, 2026", "estado": "No Iniciado"}, {"id": 4, "aula": "Prácticas Grupales en Salud Mental 2026", "tipo": "Curso", "categoria": "Dirección de Salud Mental", "acceso": "Solo cursantes", "participantes": 137.0, "participantes_raw": "137", "fecha": "2026-10-01", "mes": "2026-10", "fecha_raw": "2026-10-01", "estado": "Iniciado"}, {"id": 5, "aula": "Curso de Perspectiva Relacional en Salud Mental. Herramientas terapeuticas para intervenir en familias, parejas, grupos y redes.", "tipo": "Curso", "categoria": "Dirección de Salud Mental", "acceso": "Solo cursantes", "participantes": 139.0, "participantes_raw": "139", "fecha": "2026-10-01", "mes": "2026-10", "fecha_raw": "2026-10-01", "estado": "Iniciado"}, {"id": 6, "aula": "Curso de Prevención y Detección de Alteraciones en el Desarrollo Infantil de 0 a 4 años (DESEPREC)", "tipo": "Curso", "categoria": "Dirección de Discapacidad", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": "2026-10-13", "mes": "2026-10", "fecha_raw": "oct 13, 2026", "estado": "No Iniciado"}, {"id": 7, "aula": "Aula Red de Laboratorios 2026.", "tipo": "Curso", "categoria": "Laboratorio Núcleo (LABNU)", "acceso": "Solo cursantes", "participantes": 195.0, "participantes_raw": "195", "fecha": "2026-09-19", "mes": "2026-09", "fecha_raw": "SEPT 19, 2026", "estado": "Iniciado"}, {"id": 8, "aula": "Claves Clínicas en Alergia: lo que todo equipo de salud debe saber", "tipo": "Curso", "categoria": "Depto. Educación para la Salud", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": "2026-10-14", "mes": "2026-10", "fecha_raw": "oct 14, 2026", "estado": "No Iniciado"}, {"id": 9, "aula": "Aula bioestadistica HC", "tipo": "Curso", "categoria": "DICYT (Investigación, Ciencia y Técnica)", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "SIN", "fecha": null, "mes": null, "fecha_raw": "SIN FECHA INICIO", "estado": "Sin Fecha Inicio"}, {"id": 10, "aula": "Evaluación de la Composición Corporal", "tipo": "Curso", "categoria": "Depto. Educación para la Salud", "acceso": "Solo cursantes", "participantes": 594.0, "participantes_raw": "594", "fecha": "2026-09-01", "mes": "2026-09", "fecha_raw": "2026-09-01", "estado": "Iniciado"}, {"id": 11, "aula": "Espacio de Formación Continua permanente para la Gestión Estratégica en Salud.(GES). Modelo de Cuidados Progresivos", "tipo": "Curso", "categoria": "Dirección de Planificación", "acceso": "Solo cursantes", "participantes": 385.0, "participantes_raw": "385", "fecha": "2026-09-01", "mes": "2026-09", "fecha_raw": "2026-09-01", "estado": "Iniciado"}, {"id": 12, "aula": "Residentes, Prevención y Control de IACS (Infecciones Asociadas al Cuidado de la Salud) 2026", "tipo": "Curso", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 703.0, "participantes_raw": "703", "fecha": "2026-07-20", "mes": "2026-07", "fecha_raw": "jul 20, 2026", "estado": "Terminado"}, {"id": 13, "aula": "ColMenAS LPP - Colaborativa para la prevención de lesiones por presión", "tipo": "Capsula", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 27.0, "participantes_raw": "27", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 14, "aula": "Formación en Salud: Herramientas para la acción educativa", "tipo": "Curso", "categoria": "Depto. Educación para la Salud", "acceso": "Solo cursantes", "participantes": 94.0, "participantes_raw": "94", "fecha": "2026-09-01", "mes": "2026-09", "fecha_raw": "sept 1, 2026", "estado": "Iniciado"}, {"id": 15, "aula": "RISAM 2026: Seminario de formación en salud mental y consumo problemático 2026.", "tipo": "Curso", "categoria": "Dirección de Salud Mental", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "SIN", "fecha": null, "mes": null, "fecha_raw": "SIN FECHA INICIO", "estado": "Sin Fecha Inicio"}, {"id": 16, "aula": "CURSO DE INFECTOLOGÍA CLÍNICA 2026.falta EE", "tipo": "Curso", "categoria": "Depto. Educación para la Salud", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "SIN", "fecha": null, "mes": null, "fecha_raw": "SIN FECHA INICIO", "estado": "Sin Fecha Inicio"}, {"id": 17, "aula": "Curso Básico de Metodología de la Investigación 2026", "tipo": "Curso", "categoria": "DICYT (Investigación, Ciencia y Técnica)", "acceso": "Solo cursantes", "participantes": 165.0, "participantes_raw": "165", "fecha": "2026-06-10", "mes": "2026-06", "fecha_raw": "jun 10, 2026", "estado": "Iniciado"}, {"id": 18, "aula": "Programa de Capacitación en Control de Infecciones", "tipo": "Curso", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 49.0, "participantes_raw": "49", "fecha": "2026-08-20", "mes": "2026-08", "fecha_raw": "ago 20, 2026", "estado": "Iniciado"}, {"id": 19, "aula": "CAEP BLOQUE 2 Curso Anual de Enfermería Práctica", "tipo": "Curso", "categoria": "CAEP (Enfermería Práctica)", "acceso": "Solo cursantes", "participantes": 300.0, "participantes_raw": "300", "fecha": "2026-07-06", "mes": "2026-07", "fecha_raw": "jul 6, 2026", "estado": "Terminado"}, {"id": 20, "aula": "Capacitación Autoadministrada en Sistema de Expediente Electrónico", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 94.0, "participantes_raw": "94", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 21, "aula": "Inducción en Calidad y Seguridad del Paciente", "tipo": "Curso", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "SIN FECHA INICIO", "estado": "Sin Fecha Inicio"}, {"id": 22, "aula": "EMERGENCIAS Y URGENCIAS GERIATRICAS MÉDICOS", "tipo": "Curso", "categoria": "Subsecretaría de Salud", "acceso": "Solo cursantes", "participantes": 255.0, "participantes_raw": "255", "fecha": "2026-05-07", "mes": "2026-05", "fecha_raw": "may 7, 2026", "estado": "Iniciado"}, {"id": 23, "aula": "Consumos Problemáticos 2026", "tipo": "Curso", "categoria": "Dirección de Maternidad e Infancia", "acceso": "Solo cursantes", "participantes": 14.0, "participantes_raw": "14", "fecha": "2026-07-05", "mes": "2026-07", "fecha_raw": "jul 5, 2026", "estado": "Terminado"}, {"id": 24, "aula": "Curso Anual de Medicina Práctica (CAMP) 2026  MÓDULO QUIRÚRGICO. Cirugía Craneofacial y Cervical", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 86.0, "participantes_raw": "86", "fecha": "2026-06-21", "mes": "2026-06", "fecha_raw": "jun 21, 2026", "estado": "Iniciado"}, {"id": 25, "aula": "Curso de capacitación para profesionales de salud en Buenas prácticas de registros clínicos", "tipo": "Curso", "categoria": "Departamento de Bioestadística", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "SIN", "fecha": null, "mes": null, "fecha_raw": "SIN FECHA INICIO", "estado": "Sin Fecha Inicio"}, {"id": 26, "aula": "2026 CAJA DE HERRAMIENTAS DE SALUD MENTAL. Apta para todo pùblico", "tipo": "Curso", "categoria": "Dirección de Salud Mental", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "SIN", "fecha": null, "mes": null, "fecha_raw": "SIN FECHA INICIO", "estado": "Sin Fecha Inicio"}, {"id": 27, "aula": "Introducción a la narrativa y comunicación visual de datos en salud", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 51.0, "participantes_raw": "51", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 28, "aula": "Introducción a las herramientas de inteligencia artificial para la gestión en salud", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 33.0, "participantes_raw": "33", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 29, "aula": "Capacitación Sistema de Atención Sanitaria  - SAS", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 30, "aula": "Gestión colaborativa y documental usando Google Workspace", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 43.0, "participantes_raw": "43", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 31, "aula": "Curso Capacitador Reconocido en Manipulación Segura de Alimentos (Primera Cohorte 2026)", "tipo": "Curso", "categoria": "Depto. Higiene e Inocuidad Alimentaria", "acceso": "Solo cursantes", "participantes": 67.0, "participantes_raw": "67", "fecha": "2026-04-14", "mes": "2026-04", "fecha_raw": "abr 14, 2026", "estado": "Terminado"}, {"id": 32, "aula": "Curso Capacitador Reconocido en Manipulación Segura de Alimentos (2da cohorte Cohorte 2026)", "tipo": "Curso", "categoria": "Depto. Higiene e Inocuidad Alimentaria", "acceso": "Solo cursantes", "participantes": null, "participantes_raw": "", "fecha": "2026-10-19", "mes": "2026-10", "fecha_raw": "2026-10-19", "estado": "No Iniciado"}, {"id": 33, "aula": "CURSO PAI 2026", "tipo": "Curso", "categoria": "Depto. Inmunizaciones", "acceso": "Solo cursantes", "participantes": 351.0, "participantes_raw": "351", "fecha": "2026-05-11", "mes": "2026-05", "fecha_raw": "may 11, 2026", "estado": "Terminado"}, {"id": 34, "aula": "Repositorio documental del Departamento de Bioestadística", "tipo": "Capsula", "categoria": "Departamento de Bioestadística", "acceso": "Solo cursantes", "participantes": 102.0, "participantes_raw": "102", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 35, "aula": "Aula B 2026 Pimera cohorte: El buen trato como eje de prácticas respetuosas hacia las infancias y adolescencias.", "tipo": "Curso", "categoria": "Dirección de Maternidad e Infancia", "acceso": "Solo cursantes", "participantes": 67.0, "participantes_raw": "67", "fecha": "2026-03-02", "mes": "2026-03", "fecha_raw": "mar 2, 2026", "estado": "Terminado"}, {"id": 36, "aula": "Aula A 2026 Primera Cohorte: El buen trato como eje de prácticas respetuosas hacia las infancias y adolescencias.", "tipo": "Curso", "categoria": "Dirección de Maternidad e Infancia", "acceso": "Solo cursantes", "participantes": 65.0, "participantes_raw": "65", "fecha": "2026-03-02", "mes": "2026-03", "fecha_raw": "mar 2, 2026", "estado": "Terminado"}, {"id": 37, "aula": "Primera Cohorte 2026 - Salud y Derechos Sexuales y Reproductivos, revisando conceptos básicos.", "tipo": "Curso", "categoria": "Dirección de Maternidad e Infancia", "acceso": "Solo cursantes", "participantes": 62.0, "participantes_raw": "62", "fecha": "2026-03-17", "mes": "2026-03", "fecha_raw": "mar 17, 2026", "estado": "Terminado"}, {"id": 38, "aula": "ColMenAS MAR - Colaborativa para el uso seguro de los Medicamentos de Alto Riesgo", "tipo": "Capsula", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 239.0, "participantes_raw": "239", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 39, "aula": "ColMenAS ID - Colaborativa para la Identificación inequívoca de los pacientes", "tipo": "Capsula", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 46.0, "participantes_raw": "46", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 40, "aula": "BIBLIOTECA DE RECURSOS EN BIOSEGURIDAD Y RESIDUOS HOSPITALARIOS", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 41, "aula": "Biblioteca instructivos para usar IA generativa", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 42, "aula": "microcurso gsheets3. Tablas y reportes estratégicos", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 51.0, "participantes_raw": "51", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 43, "aula": "Sistema Informático de Gestión Asistencial", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": 11.0, "participantes_raw": "11", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 44, "aula": "Toxicología Clinica", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 248.0, "participantes_raw": "248", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 45, "aula": "Microcurso I: Fundamentos de datos para la gestión sanitaria con Google Sheets", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 179.0, "participantes_raw": "179", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 46, "aula": "Redacción Administrativa Asistida por Inteligencia Artificial Generativa", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 165.0, "participantes_raw": "165", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 47, "aula": "Competencias digitales para profesionales de la salud. Autogestionado", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 236.0, "participantes_raw": "236", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 48, "aula": "Google Sheets 2: Organización, filtros y fórmulas esenciales", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 87.0, "participantes_raw": "87", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 49, "aula": "Unidad de Estandarización Documental – FPECC", "tipo": "Capsula", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 27.0, "participantes_raw": "27", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 50, "aula": "Capacitación en Colocación de DIU e ISD para Licenciadas/os en Obstetricia", "tipo": "Curso", "categoria": "Dirección de Maternidad e Infancia", "acceso": "Solo cursantes", "participantes": 101.0, "participantes_raw": "101", "fecha": "2025-12-01", "mes": "2025-12", "fecha_raw": "2025-12-01", "estado": "Terminado"}, {"id": 51, "aula": "Espacio de Aula Virtual para PproFaSe: PROYECTO PROVINCIAL PARA UNA FARMACOTERAPIA SEGURA Y EFECTIVA", "tipo": "Capsula", "categoria": "Dirección de Epidemiología", "acceso": "Solo cursantes", "participantes": 277.0, "participantes_raw": "277", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 52, "aula": "Dimensiones Socioculturales de la Salud: Perspectivas para la Gestión Sanitaria", "tipo": "Curso", "categoria": "Dirección de Modernización", "acceso": "Solo cursantes", "participantes": 111.0, "participantes_raw": "111", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 53, "aula": "Estantería de recursos", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 54, "aula": "Nociones básicas de personal y asistencia", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}, {"id": 55, "aula": "Repositorio Documental", "tipo": "Capsula", "categoria": "Laboratorio Núcleo (LABNU)", "acceso": "Solo cursantes", "participantes": 110.0, "participantes_raw": "110", "fecha": "2026-01-01", "mes": "2026-01", "fecha_raw": "2026-01-01", "estado": "Permanente"}, {"id": 56, "aula": "Gestión en el Laboratorio", "tipo": "Capsula", "categoria": "Laboratorio Núcleo (LABNU)", "acceso": "Solo cursantes", "participantes": 135.0, "participantes_raw": "135", "fecha": "2026-01-01", "mes": "2026-01", "fecha_raw": "2026-01-01", "estado": "Permanente"}, {"id": 57, "aula": "Aula general para los docentes y gestores", "tipo": "Capsula", "categoria": "Dirección de Modernización", "acceso": "Libre", "participantes": null, "participantes_raw": "", "fecha": null, "mes": null, "fecha_raw": "NO TIENE", "estado": "Permanente"}]
 </script>
@@ -611,20 +1132,30 @@ body.hc .kpi-card, body.hc .chart-container, body.hc .table-section, body.hc .da
 <script>
 const RAW_DATA = JSON.parse(document.getElementById('data-holder').textContent);
 
-const COLORS = ['#0B109F', '#36B4E6', '#C8A877', '#55A868', '#C44E52', '#8172B3', '#937860', '#4fa9a8', '#7d8597', '#a1683a'];
+// Paleta Semántica Restringida y Sobria
 const ESTADO_COLORS = {
-  'Iniciado': '#55A868',
-  'Permanente': '#36B4E6',
-  'Terminado': '#7d8597',
-  'No Iniciado': '#C8A877',
-  'Sin Fecha Inicio': '#C44E52'
+  'Iniciado': '#16A34A',        // Verde sobrio para en cursada
+  'Permanente': '#0284C7',      // Azul cian para aulas autogestionadas
+  'Terminado': '#64748B',       // Pizarra neutro
+  'No Iniciado': '#D97706',     // Ámbar para previstos con fecha
+  'Sin Fecha Inicio': '#94A3B8' // Gris frío para diseño pedagógico
 };
 
-const MESES_LABEL = {'01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun','07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'};
+const MESES_LABEL = {
+  '01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun',
+  '07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'
+};
 
 function fmt(n) {
-  if (n === null || n === undefined || isNaN(n)) return '0';
+  if (n === null || n === undefined || isNaN(n)) return '—';
   return Math.round(n).toLocaleString('es-AR');
+}
+
+function calcMedian(numbers) {
+  if (!numbers.length) return 0;
+  const sorted = [...numbers].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : Math.round((sorted[mid - 1] + sorted[mid]) / 2);
 }
 
 const ORG_CANONICAL = {
@@ -660,7 +1191,7 @@ class DashboardAulas {
     this.search = '';
     this.charts = {};
     this.page = 0;
-    this.pageSize = 12;
+    this.pageSize = 15;
     this.sortCol = 'aula';
     this.sortDir = 'asc';
     this.init();
@@ -671,6 +1202,7 @@ class DashboardAulas {
     this.setupEventListeners();
     this.setupDropzone();
     this.setupQuickFilters();
+    this.setupModal();
     this.refresh();
   }
 
@@ -692,7 +1224,24 @@ class DashboardAulas {
     document.getElementById('btn-clear').addEventListener('click', () => this.clearFilters());
     document.getElementById('btn-hc').addEventListener('click', () => document.body.classList.toggle('hc'));
 
-    // Descarga HTML autónomo con el dataset actualmente en memoria
+    // Toggle Panel de Herramientas / Drag&Drop
+    const panel = document.getElementById('panel-tools');
+    document.getElementById('btn-toggle-tools').addEventListener('click', () => {
+      panel.classList.toggle('open');
+    });
+    document.getElementById('btn-close-tools').addEventListener('click', () => {
+      panel.classList.remove('open');
+    });
+
+    // Selector de tamaño de página
+    document.getElementById('page-size-select').addEventListener('change', (e) => {
+      const val = e.target.value;
+      this.pageSize = val === 'all' ? 9999 : parseInt(val, 10);
+      this.page = 0;
+      this.renderTable();
+    });
+
+    // Descarga HTML autónomo
     document.getElementById('btn-dl-html').addEventListener('click', () => {
       const clone = document.documentElement.cloneNode(true);
       const dataHolder = clone.querySelector('#data-holder');
@@ -703,7 +1252,7 @@ class DashboardAulas {
       showToast('Dashboard autónomo (.html) descargado con éxito.');
     });
 
-    // Exportar a Excel (.xlsx) usando SheetJS
+    // Exportar a Excel (.xlsx)
     document.getElementById('btn-dl-xlsx').addEventListener('click', () => {
       this.exportToExcel();
     });
@@ -752,7 +1301,11 @@ class DashboardAulas {
     const fileInput = document.getElementById('file-excel-input');
     const browseBtn = document.getElementById('btn-browse-file');
 
-    browseBtn.addEventListener('click', () => fileInput.click());
+    browseBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput.click();
+    });
+    dropzone.addEventListener('click', () => fileInput.click());
 
     fileInput.addEventListener('change', (e) => {
       if (e.target.files && e.target.files[0]) {
@@ -783,17 +1336,16 @@ class DashboardAulas {
   }
 
   setupQuickFilters() {
-    document.querySelectorAll('.quick-filter-chip').forEach(chip => {
+    document.querySelectorAll('.chip').forEach(chip => {
       chip.addEventListener('click', () => {
         const type = chip.dataset.filterType;
         const val = chip.dataset.filterVal;
         const isCurrent = this.activeFilters[type] === val;
         
-        // Toggle
         this.activeFilters[type] = isCurrent ? null : val;
         document.getElementById('f-' + type).value = this.activeFilters[type] || 'all';
         
-        document.querySelectorAll('.quick-filter-chip').forEach(c => {
+        document.querySelectorAll('.chip').forEach(c => {
           const cType = c.dataset.filterType;
           const cVal = c.dataset.filterVal;
           if (this.activeFilters[cType] === cVal) c.classList.add('active');
@@ -806,9 +1358,71 @@ class DashboardAulas {
     });
   }
 
+  setupModal() {
+    const overlay = document.getElementById('modal-detail');
+    const closeBtn = document.getElementById('btn-close-modal');
+    const dismissBtn = document.getElementById('btn-modal-dismiss');
+    
+    const closeModal = () => overlay.classList.remove('open');
+    closeBtn.addEventListener('click', closeModal);
+    dismissBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+  }
+
+  openDetail(id) {
+    const item = this.raw.find(x => x.id === id);
+    if (!item) return;
+
+    document.getElementById('modal-aula-title').textContent = item.aula;
+    const body = document.getElementById('modal-aula-content');
+    
+    let badgeClass = 'badge-permanente';
+    if (item.estado === 'Iniciado') badgeClass = 'badge-iniciado';
+    else if (item.estado === 'Terminado') badgeClass = 'badge-terminado';
+    else if (item.estado === 'No Iniciado') badgeClass = 'badge-no-iniciado';
+    else if (item.estado === 'Sin Fecha Inicio') badgeClass = 'badge-sin-fecha';
+
+    body.innerHTML = `
+      <div class="modal-field">
+        <span class="modal-field-label">Dirección / Área Responsable</span>
+        <span class="modal-field-val">${item.categoria}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="modal-field">
+          <span class="modal-field-label">Modalidad / Tipo</span>
+          <span class="modal-field-val">${item.tipo}</span>
+        </div>
+        <div class="modal-field">
+          <span class="modal-field-label">Acceso a Matriculación</span>
+          <span class="modal-field-val">${item.acceso}</span>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+        <div class="modal-field">
+          <span class="modal-field-label">Fecha de Inicio Registrada</span>
+          <span class="modal-field-val">${item.fecha_raw || 'No asignada'}</span>
+        </div>
+        <div class="modal-field">
+          <span class="modal-field-label">Participantes Formales</span>
+          <span class="modal-field-val tabular" style="font-weight: 700; color: var(--primary);">
+            ${item.participantes !== null ? fmt(item.participantes) + ' inscriptos' : (item.participantes_raw === 'SIN' ? 'En diseño pedagógico' : 'Próxima matriculación')}
+          </span>
+        </div>
+      </div>
+      <div class="modal-field">
+        <span class="modal-field-label">Estado Operativo</span>
+        <div><span class="badge ${badgeClass}">${item.estado}</span></div>
+      </div>
+    `;
+
+    document.getElementById('modal-detail').classList.add('open');
+  }
+
   processExcelFile(file) {
     if (!window.XLSX) {
-      showToast('SheetJS no se encuentra disponible. Verifique su conexión a internet.', 'error');
+      showToast('SheetJS no disponible.', 'error');
       return;
     }
     const reader = new FileReader();
@@ -819,7 +1433,6 @@ class DashboardAulas {
         const firstSheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[firstSheetName];
         
-        // Convert sheet to array of rows
         const rawJson = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
         const parsedRecords = this.parseRawExcelRows(rawJson);
         
@@ -832,14 +1445,14 @@ class DashboardAulas {
         this.populateDropdowns();
         this.clearFilters();
         
-        // Update DOM metadata
         document.getElementById('total-label').textContent = parsedRecords.length;
-        document.getElementById('status-info').textContent = `Base consolidada: ${parsedRecords.length} aulas activas (Cargado: ${file.name})`;
+        document.getElementById('status-info').textContent = `Base consolidada: ${parsedRecords.length} aulas activas (${file.name})`;
         
-        showToast(`¡Planilla procesada con éxito! ${parsedRecords.length} aulas sincronizadas.`);
+        showToast(`¡Planilla sincronizada! ${parsedRecords.length} aulas cargadas.`);
+        document.getElementById('panel-tools').classList.remove('open');
       } catch (err) {
         console.error('Error procesando Excel:', err);
-        showToast('Error al parsear el archivo Excel: ' + err.message, 'error');
+        showToast('Error al parsear Excel: ' + err.message, 'error');
       }
     };
     reader.readAsArrayBuffer(file);
@@ -848,7 +1461,6 @@ class DashboardAulas {
   parseRawExcelRows(rows) {
     if (!rows || rows.length < 2) return [];
     
-    // Find header row containing 'AULA'
     let headerIdx = -1;
     let colStart = 0;
     for (let r = 0; r < Math.min(10, rows.length); r++) {
@@ -869,7 +1481,6 @@ class DashboardAulas {
     let recordId = 1;
 
     dataRows.forEach(row => {
-      // Offset by colStart
       const r = row.slice(colStart);
       const aula = String(r[0] || '').trim();
       if (!aula || aula.toLowerCase() === 'aula') return;
@@ -887,7 +1498,6 @@ class DashboardAulas {
       let sdateRaw = String(r[5] !== undefined ? r[5] : '').trim();
       let estadoRaw = String(r[6] !== undefined ? r[6] : '').trim().toUpperCase();
 
-      // Check anomalies (shifted cells)
       if (['oct', 'sep', 'nov', 'dic', '2026'].some(m => partRaw.toLowerCase().includes(m)) && isNaN(Number(sdateRaw))) {
         if (!estadoRaw && ['NO INICIADO', 'INICIADO', 'TERMINADO'].includes(sdateRaw)) {
           estadoRaw = sdateRaw;
@@ -914,7 +1524,6 @@ class DashboardAulas {
       let mes = null;
       let fechaDisplay = sdateRaw;
 
-      // Handle Date Object or serial number
       if (r[5] instanceof Date) {
         const d = r[5];
         const y = d.getFullYear();
@@ -924,7 +1533,6 @@ class DashboardAulas {
         mes = `${y}-${m}`;
         fechaDisplay = fecha;
       } else if (!isNaN(Number(sdateRaw)) && Number(sdateRaw) > 20000) {
-        // Excel date serial
         const dateObj = new Date(Math.round((Number(sdateRaw) - 25569) * 86400 * 1000));
         const y = dateObj.getFullYear();
         const m = String(dateObj.getMonth() + 1).padStart(2, '0');
@@ -960,7 +1568,13 @@ class DashboardAulas {
     Object.entries(fields).forEach(([f, id]) => {
       const vals = [...new Set(this.raw.map(d => d[f]))].filter(Boolean).sort();
       const sel = document.getElementById(id);
-      sel.innerHTML = '<option value="all">Todas</option>';
+      const defaultLabels = {
+        categoria: 'Todas las Direcciones / Áreas',
+        tipo: 'Todos los Tipos',
+        estado: 'Todos los Estados',
+        acceso: 'Cualquier Acceso'
+      };
+      sel.innerHTML = `<option value="all">${defaultLabels[f]}</option>`;
       vals.forEach(v => {
         const opt = document.createElement('option');
         opt.value = v; opt.textContent = v;
@@ -976,7 +1590,7 @@ class DashboardAulas {
     ['categoria', 'tipo', 'estado', 'acceso'].forEach(k => {
       document.getElementById('f-' + k).value = 'all';
     });
-    document.querySelectorAll('.quick-filter-chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
     this.page = 0;
     this.refresh();
   }
@@ -985,8 +1599,7 @@ class DashboardAulas {
     this.activeFilters[field] = this.activeFilters[field] === val ? null : val;
     document.getElementById('f-' + field).value = this.activeFilters[field] || 'all';
     
-    // Sync chips
-    document.querySelectorAll('.quick-filter-chip').forEach(c => {
+    document.querySelectorAll('.chip').forEach(c => {
       const cType = c.dataset.filterType;
       const cVal = c.dataset.filterVal;
       if (this.activeFilters[cType] === cVal) c.classList.add('active');
@@ -1017,20 +1630,37 @@ class DashboardAulas {
   }
 
   renderBanner() {
-    const banner = document.getElementById('banner');
-    const parts = [];
+    const banner = document.getElementById('active-banner');
+    const tagsContainer = document.getElementById('active-tags-list');
+    tagsContainer.innerHTML = '';
+    
+    let hasFilters = false;
     Object.entries(this.activeFilters).forEach(([k, v]) => {
-      if (v) parts.push(`${k}: <b onclick="dash.setFilter('${k}', '${v.replace(/'/g, "\\'")}')">${v} ✕</b>`);
+      if (v) {
+        hasFilters = true;
+        const tag = document.createElement('span');
+        tag.className = 'filter-tag';
+        tag.textContent = `${k}: ${v} ✕`;
+        tag.addEventListener('click', () => this.setFilter(k, v));
+        tagsContainer.appendChild(tag);
+      }
     });
+
     if (this.search) {
-      parts.push(`búsqueda: <b onclick="document.getElementById('f-search').value=''; dash.search=''; dash.refresh();">"${this.search}" ✕</b>`);
+      hasFilters = true;
+      const tag = document.createElement('span');
+      tag.className = 'filter-tag';
+      tag.textContent = `búsqueda: "${this.search}" ✕`;
+      tag.addEventListener('click', () => {
+        document.getElementById('f-search').value = '';
+        this.search = '';
+        this.refresh();
+      });
+      tagsContainer.appendChild(tag);
     }
-    if (parts.length) {
-      banner.innerHTML = 'Filtros aplicados: ' + parts.join(' · ') + ' &nbsp; <span style="cursor:pointer; text-decoration:underline; font-weight:700;" onclick="dash.clearFilters()">[Limpiar todos]</span>';
-      banner.classList.add('show');
-    } else {
-      banner.classList.remove('show');
-    }
+
+    if (hasFilters) banner.classList.add('show');
+    else banner.classList.remove('show');
   }
 
   renderKPIs() {
@@ -1041,28 +1671,37 @@ class DashboardAulas {
     const capsulas = d.filter(x => x.tipo === 'Capsula').length;
     document.getElementById('kpi-total-sub').textContent = `${cursos} cursos · ${capsulas} cápsulas`;
 
-    document.getElementById('kpi-permanente').textContent = d.filter(x => x.estado === 'Permanente').length;
-    document.getElementById('kpi-iniciado').textContent = d.filter(x => x.estado === 'Iniciado').length;
-    document.getElementById('kpi-terminado').textContent = d.filter(x => x.estado === 'Terminado').length;
-
     const conPart = d.filter(x => x.participantes !== null);
     const totalPart = conPart.reduce((acc, x) => acc + x.participantes, 0);
     document.getElementById('kpi-participantes').textContent = fmt(totalPart);
-    
-    // Promedio de cohorte
+    document.getElementById('kpi-matricula-sub').textContent = `en ${conPart.length} aulas con matrícula cargada`;
+
+    const iniciados = d.filter(x => x.estado === 'Iniciado').length;
+    const permanentes = d.filter(x => x.estado === 'Permanente').length;
+    document.getElementById('kpi-activos').textContent = iniciados + permanentes;
+    document.getElementById('kpi-activos-sub').textContent = `${iniciados} iniciados · ${permanentes} permanentes`;
+
+    const cobertura = d.length > 0 ? Math.round((conPart.length / d.length) * 100) : 0;
+    document.getElementById('kpi-cobertura').textContent = `${cobertura}%`;
+    document.getElementById('kpi-cobertura-sub').textContent = `${conPart.length} de ${d.length} aulas con datos numéricos`;
+
+    // Rigor Estadístico: Promedio y Mediana
     const avgCohorte = conPart.length > 0 ? Math.round(totalPart / conPart.length) : 0;
     document.getElementById('kpi-promedio').textContent = fmt(avgCohorte);
 
+    const values = conPart.map(x => x.participantes);
+    const mediana = calcMedian(values);
+    document.getElementById('kpi-mediana').textContent = fmt(mediana);
+
+    // Segmentación Curso vs Cápsula
+    const cursosConPart = conPart.filter(x => x.tipo === 'Curso');
+    const capConPart = conPart.filter(x => x.tipo === 'Capsula');
+    const avgCursos = cursosConPart.length > 0 ? Math.round(cursosConPart.reduce((a,c) => a+c.participantes,0)/cursosConPart.length) : 0;
+    const avgCap = capConPart.length > 0 ? Math.round(capConPart.reduce((a,c) => a+c.participantes,0)/capConPart.length) : 0;
+    document.getElementById('kpi-prom-segmentado').textContent = `${fmt(avgCursos)} / ${fmt(avgCap)}`;
+
     document.getElementById('kpi-no-iniciado').textContent = d.filter(x => x.estado === 'No Iniciado').length;
     document.getElementById('kpi-sin-fecha').textContent = d.filter(x => x.estado === 'Sin Fecha Inicio').length;
-
-    const libres = d.filter(x => x.acceso === 'Libre').length;
-    const cerrados = d.filter(x => x.acceso === 'Solo cursantes').length;
-    document.getElementById('kpi-acceso-ratio').textContent = `${libres} / ${cerrados}`;
-
-    // Completitud de datos
-    const cobertura = d.length > 0 ? Math.round((conPart.length / d.length) * 100) : 0;
-    document.getElementById('kpi-cobertura').textContent = `${cobertura}%`;
   }
 
   renderCharts() {
@@ -1072,15 +1711,19 @@ class DashboardAulas {
     this.chartCronograma();
   }
 
+  // GRÁFICO 1: BARRAS HORIZONTALES APILADAS (ORDENADAS POR VOLUMEN DESCENDENTE)
   chartCategoriaEstado() {
     const d = this.filtered();
-    const categorias = [...new Set(d.map(x => x.categoria))].sort();
+    const totalsByCat = {};
+    d.forEach(x => { totalsByCat[x.categoria] = (totalsByCat[x.categoria] || 0) + 1; });
+    const sortedCats = Object.entries(totalsByCat).sort((a,b) => b[1] - a[1]).map(x => x[0]);
+    
     const estados = ['Permanente', 'Iniciado', 'Terminado', 'No Iniciado', 'Sin Fecha Inicio'];
 
     const datasets = estados.map(est => ({
       label: est,
-      data: categorias.map(c => d.filter(x => x.categoria === c && x.estado === est).length),
-      backgroundColor: this.activeFilters.estado && this.activeFilters.estado !== est ? '#d9dde3' : ESTADO_COLORS[est],
+      data: sortedCats.map(c => d.filter(x => x.categoria === c && x.estado === est).length),
+      backgroundColor: this.activeFilters.estado && this.activeFilters.estado !== est ? '#E2E8F0' : ESTADO_COLORS[est],
       borderRadius: 3
     }));
 
@@ -1088,13 +1731,14 @@ class DashboardAulas {
     const ctx = document.getElementById('chart-cat-estado').getContext('2d');
     this.charts['cat-estado'] = new Chart(ctx, {
       type: 'bar',
-      data: { labels: categorias, datasets },
+      data: { labels: sortedCats, datasets },
       options: {
+        indexAxis: 'y', // HORIZONTAL PARA LECTURA NATURAL
         responsive: true,
         maintainAspectRatio: false,
         onClick: (evt, els) => {
           if (els.length) {
-            const cat = categorias[els[0].index];
+            const cat = sortedCats[els[0].index];
             const est = estados[els[0].datasetIndex];
             this.setFilter('categoria', cat);
             if (this.activeFilters.estado !== est) this.setFilter('estado', est);
@@ -1103,23 +1747,25 @@ class DashboardAulas {
         plugins: {
           legend: {
             position: 'top',
-            labels: { usePointStyle: true, padding: 12 },
+            labels: { usePointStyle: true, padding: 14, font: { size: 11, family: 'Inter' } },
             onClick: (e, item) => this.setFilter('estado', item.text)
           },
           tooltip: {
+            padding: 10,
             callbacks: {
-              label: (c) => ` ${c.dataset.label}: ${c.parsed.y} aula(s)`
+              label: (c) => ` ${c.dataset.label}: ${c.parsed.x} aula(s)`
             }
           }
         },
         scales: {
-          x: { stacked: true, ticks: { autoSkip: false, font: { size: 10 }, maxRotation: 55, minRotation: 25 } },
-          y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } }
+          x: { stacked: true, beginAtZero: true, ticks: { precision: 0 } },
+          y: { stacked: true, ticks: { font: { size: 11, family: 'Inter' } } }
         }
       }
     });
   }
 
+  // GRÁFICO 2: PARTICIPANTES POR DIRECCIÓN / ÁREA
   chartCategoriaParticipantes() {
     const d = this.filtered();
     const totals = {};
@@ -1141,31 +1787,32 @@ class DashboardAulas {
         datasets: [{
           label: 'Participantes',
           data: values,
-          backgroundColor: labels.map((l, i) => this.activeFilters.categoria && this.activeFilters.categoria !== l ? '#d9dde3' : COLORS[i % COLORS.length]),
+          backgroundColor: labels.map(l => this.activeFilters.categoria && this.activeFilters.categoria !== l ? '#E2E8F0' : '#2563EB'),
           borderRadius: 4
         }]
       },
       options: {
+        indexAxis: 'y',
         responsive: true,
         maintainAspectRatio: false,
-        indexAxis: 'y',
         onClick: (evt, els) => {
           if (els.length) this.setFilter('categoria', labels[els[0].index]);
         },
         plugins: {
           legend: { display: false },
           tooltip: {
-            callbacks: { label: (c) => ` ${fmt(c.parsed.x)} participantes registrados` }
+            callbacks: { label: (c) => ` ${fmt(c.parsed.x)} participantes matriculados` }
           }
         },
         scales: {
           x: { beginAtZero: true, ticks: { precision: 0 } },
-          y: { ticks: { autoSkip: false, font: { size: 10 } } }
+          y: { ticks: { autoSkip: false, font: { size: 10.5, family: 'Inter' } } }
         }
       }
     });
   }
 
+  // GRÁFICO 3: TIPO DE RECURSO SEGÚN ACCESO
   chartTipoAcceso() {
     const d = this.filtered();
     const tipos = ['Curso', 'Capsula'];
@@ -1174,7 +1821,7 @@ class DashboardAulas {
     const datasets = accesos.map((acc) => ({
       label: acc,
       data: tipos.map(t => d.filter(x => x.tipo === t && x.acceso === acc).length),
-      backgroundColor: acc === 'Solo cursantes' ? '#0B109F' : '#36B4E6',
+      backgroundColor: acc === 'Solo cursantes' ? '#0F2D6B' : '#0284C7',
       borderRadius: 4
     }));
 
@@ -1182,7 +1829,7 @@ class DashboardAulas {
     const ctx = document.getElementById('chart-tipo-acceso').getContext('2d');
     this.charts['tipo-acc'] = new Chart(ctx, {
       type: 'bar',
-      data: { labels: ['Curso', 'Cápsula'], datasets },
+      data: { labels: ['Cursos Formales', 'Cápsulas Autogestionadas'], datasets },
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -1206,6 +1853,7 @@ class DashboardAulas {
     });
   }
 
+  // GRÁFICO 4: CRONOGRAMA 2026 CON ÁREA SOMBREADA
   chartCronograma() {
     const d = this.filtered().filter(x => x.mes && x.estado !== 'Permanente');
     const counts = {};
@@ -1228,21 +1876,23 @@ class DashboardAulas {
         datasets: [
           {
             type: 'bar',
-            label: 'Cohortes que inician en el mes',
+            label: 'Nuevas cohortes que abren en el mes',
             data: values,
-            backgroundColor: '#0B109FCC',
+            backgroundColor: '#0F2D6B',
             borderRadius: 4,
             yAxisID: 'y'
           },
           {
             type: 'line',
-            label: 'Cursos acumulados iniciados',
+            label: 'Total acumulado en el ciclo',
             data: acumulado,
-            borderColor: '#C8A877',
-            backgroundColor: '#C8A877',
+            borderColor: '#D97706',
+            backgroundColor: 'rgba(217, 119, 6, 0.12)',
+            fill: true,
             borderWidth: 2.5,
-            tension: 0.25,
+            tension: 0.3,
             pointRadius: 4,
+            pointBackgroundColor: '#D97706',
             yAxisID: 'y1'
           }
         ]
@@ -1256,7 +1906,7 @@ class DashboardAulas {
         },
         scales: {
           y: { beginAtZero: true, ticks: { precision: 0 }, title: { display: true, text: 'Aperturas del mes' } },
-          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Acumulado' } }
+          y1: { beginAtZero: true, position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Cursos Acumulados' } }
         }
       }
     });
@@ -1266,13 +1916,13 @@ class DashboardAulas {
     const all = this.filtered();
     document.getElementById('table-count').textContent = all.length;
 
-    // Update table header sort indicators
+    // Actualizar encabezados
     document.querySelectorAll('.data-table thead th').forEach(th => {
       const col = th.dataset.col;
       let label = th.textContent.replace(/[ ▲▼]/g, '');
       if (this.sortCol === col) {
         th.textContent = `${label} ${this.sortDir === 'asc' ? '▲' : '▼'}`;
-        th.style.color = 'var(--navy)';
+        th.style.color = 'var(--primary)';
       } else {
         th.textContent = label;
         th.style.color = '';
@@ -1296,10 +1946,22 @@ class DashboardAulas {
     tbody.innerHTML = '';
 
     if (pageData.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 24px; color: var(--text-secondary);">No se encontraron espacios formativos con los filtros actuales.</td></tr>';
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <div class="empty-state-icon">🔎</div>
+              <h5>No se encontraron aulas con los filtros seleccionados</h5>
+              <p style="font-size: 12px;">Intenta cambiar el criterio de búsqueda o restablecer los filtros activos.</p>
+              <button class="btn-toolbar" style="margin: 10px auto 0;" onclick="dash.clearFilters()">Restablecer Filtros</button>
+            </div>
+          </td>
+        </tr>
+      `;
       document.getElementById('pag-info').textContent = 'Mostrando 0 de 0';
       document.getElementById('pag-prev').disabled = true;
       document.getElementById('pag-next').disabled = true;
+      document.getElementById('foot-total-part').textContent = '—';
       return;
     }
 
@@ -1311,22 +1973,27 @@ class DashboardAulas {
       else if (r.estado === 'No Iniciado') badgeClass = 'badge-no-iniciado';
       else if (r.estado === 'Sin Fecha Inicio') badgeClass = 'badge-sin-fecha';
 
-      let partTxt = r.participantes !== null ? fmt(r.participantes) : (r.participantes_raw === 'SIN' ? '<span style="color:#a1683a;">En diseño</span>' : '<span style="color:#71717a;">Próx. inscr.</span>');
+      let partTxt = r.participantes !== null ? fmt(r.participantes) : (r.participantes_raw === 'SIN' ? '<span style="color:#94A3B8;">— (En diseño)</span>' : '<span style="color:#64748B;">— (Próx.)</span>');
 
       tr.innerHTML = `
-        <td style="font-weight: 600; color: var(--navy);">${r.aula}</td>
+        <td style="font-weight: 600; color: var(--primary);">${r.aula}</td>
         <td>${r.categoria}</td>
         <td>${r.tipo}</td>
-        <td><span style="font-size:11.5px; color:${r.acceso==='Libre'?'#0369a1':'#52525b'}; font-weight:600;">${r.acceso}</span></td>
-        <td>${r.fecha_raw || 's/d'}</td>
-        <td style="text-align: right; padding-right: 20px;">${partTxt}</td>
+        <td><span style="font-size:11.5px; color:${r.acceso==='Libre'?'#0284C7':'#475569'}; font-weight:600;">${r.acceso}</span></td>
+        <td>${r.fecha_raw || '—'}</td>
+        <td style="text-align: right; font-variant-numeric: tabular-nums;">${partTxt}</td>
         <td><span class="badge ${badgeClass}">${r.estado}</span></td>
       `;
+      tr.addEventListener('click', () => this.openDetail(r.id));
       tbody.appendChild(tr);
     });
 
+    // Fila de Totales en el Pie de la Tabla
+    const visiblePartSum = all.filter(x => x.participantes !== null).reduce((acc, c) => acc + c.participantes, 0);
+    document.getElementById('foot-total-part').textContent = fmt(visiblePartSum);
+
     const totalPages = Math.max(1, Math.ceil(all.length / this.pageSize));
-    document.getElementById('pag-info').textContent = `Mostrando ${start + 1}-${Math.min(start + this.pageSize, all.length)} de ${all.length}`;
+    document.getElementById('pag-info').textContent = `Mostrando ${start + 1}-${Math.min(start + this.pageSize, all.length)} de ${all.length} aulas`;
     document.getElementById('pag-prev').disabled = this.page === 0;
     document.getElementById('pag-next').disabled = this.page + 1 >= totalPages;
   }
