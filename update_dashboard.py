@@ -32,7 +32,9 @@ ORG_MAP = {
     'Inmunizaciones': 'Depto. Inmunizaciones',
     'PLANIFICACION': 'Dirección de Planificación',
     'DIR. DISCAPACIDAD': 'Dirección de Discapacidad',
-    'EXTERNO': 'Organismos Externos'
+    'EXTERNO': 'Organismos Externos',
+    'RESIDENCIAS': 'Residencias de Salud',
+    'RESIDENCIAS ': 'Residencias de Salud'
 }
 
 MESES = {
@@ -252,14 +254,14 @@ def update_html(html_path, records):
         return False
         
     new_content = re.sub(
-        r'<span id="total-label">\d+</span>',
-        f'<span id="total-label">{len(records)}</span>',
+        r'<span id="total-label"([^>]*)>\d+</span>',
+        rf'<span id="total-label"\g<1>>{len(records)}</span>',
         new_content
     )
     
     new_content = re.sub(
-        r'<span class="status-info" id="status-info">[^<]*</span>',
-        f'<span class="status-info" id="status-info">Base consolidada: {len(records)} aulas activas</span>',
+        r'<span([^>]*id="status-info"[^>]*)>[^<]*</span>',
+        rf'<span\g<1>>Base consolidada: {len(records)} aulas activas</span>',
         new_content
     )
     
